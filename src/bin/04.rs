@@ -117,7 +117,7 @@ fn get_last_winning_board(numbers: &[usize], boards: &[Board]) -> (Board, usize)
 }
 
 #[cfg(test)]
-mod problem03 {
+mod problem04 {
     use super::*;
 
     #[test]
