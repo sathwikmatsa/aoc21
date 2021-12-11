@@ -203,7 +203,7 @@ fn load_file(path: impl AsRef<Path>) -> String {
 }
 
 #[cfg(test)]
-mod problem09 {
+mod problem10 {
     use super::*;
 
     #[test]
