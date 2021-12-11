@@ -48,7 +48,7 @@ fn find_fresh_flashing_octopus(
     cavern: &[Vec<u32>],
     processed: &HashSet<(usize, usize)>,
 ) -> Option<(usize, usize)> {
-    if let Some((pos, _)) = cavern
+    cavern
         .iter()
         .enumerate()
         .map(|(row_idx, row)| {
@@ -58,53 +58,36 @@ fn find_fresh_flashing_octopus(
         })
         .flatten()
         .find(|(pos, e)| e.is_flashing() && !processed.contains(pos))
-    {
-        Some(pos)
-    } else {
-        None
-    }
+        .map(|(pos, _)| pos)
 }
 
 fn increase_neighbour_energy_level(pos: (usize, usize), cavern: &mut OctopusCavern) {
-    let (row, col) = pos;
-    // north
-    if let Some(r) = row.checked_sub(1) {
-        cavern[r][col] += 1;
-    }
-    // south
-    if row + 1 < cavern.len() {
-        cavern[row + 1][col] += 1;
-    }
-    // west
-    if let Some(c) = col.checked_sub(1) {
-        cavern[row][c] += 1;
-    }
-    // east
-    if col + 1 < cavern[0].len() {
-        cavern[row][col + 1] += 1;
-    }
-    // northeast
-    if let Some(r) = row.checked_sub(1) {
-        if col + 1 < cavern[0].len() {
-            cavern[r][col + 1] += 1;
-        }
-    }
-    // northwest
-    if let Some(r) = row.checked_sub(1) {
-        if let Some(c) = col.checked_sub(1) {
-            cavern[r][c] += 1;
-        }
-    }
-    // southeast
-    if row + 1 < cavern.len() && col + 1 < cavern[0].len() {
-        cavern[row + 1][col + 1] += 1;
-    }
-    // southwest
-    if row + 1 < cavern.len() {
-        if let Some(c) = col.checked_sub(1) {
-            cavern[row + 1][c] += 1;
-        }
-    }
+    const NEIGHBOURS: [[i32; 2]; 8] = [
+        [-1, 0],
+        [1, 0],
+        [0, -1],
+        [0, 1],
+        [-1, 1],
+        [-1, -1],
+        [1, 1],
+        [1, -1],
+    ];
+    let n_rows = cavern.len() as i32;
+    let n_cols = cavern[0].len() as i32;
+
+    NEIGHBOURS
+        .iter()
+        .filter_map(|[r, c]| {
+            let row = pos.0 as i32 + r;
+            let col = pos.1 as i32 + c;
+            match (0..n_rows).contains(&row) && (0..n_cols).contains(&col) {
+                true => Some((row as usize, col as usize)),
+                _ => None,
+            }
+        })
+        .for_each(|(row, col)| {
+            cavern[row][col] += 1;
+        });
 }
 
 fn step(cavern: &mut OctopusCavern) -> usize {
@@ -145,11 +128,7 @@ fn main() {
 }
 
 fn cavern_levels(path: impl AsRef<Path>) -> OctopusCavern {
-    std::fs::read_to_string(path)
-        .unwrap()
-        .lines()
-        .map(|s| s.chars().map(|c| c.to_digit(10).unwrap()).collect())
-        .collect()
+    Cavern::from_str(std::fs::read_to_string(path).unwrap().as_str())
 }
 
 #[cfg(test)]
